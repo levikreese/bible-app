@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lectern — Bible Study</title>
+<style>
+:root{--bg:#fff;--fg:#1b1b1f;--mut:#6b6b76;--pan:#f4f4f7;--bd:#dcdce3;--ac:#2f5fd0;--s:Georgia,'Iowan Old Style',serif;--f:system-ui,-apple-system,'Segoe UI',sans-serif}
+[data-theme=dark]{--bg:#121316;--fg:#e8e8ec;--mut:#9a9aa6;--pan:#1c1d22;--bd:#2c2e35;--ac:#7aa2ff}
+[data-theme=manuscript]{--bg:#f1e4c3;--fg:#3b2a17;--mut:#7a6444;--pan:#e8d7ad;--bd:#cdb784;--ac:#8a2b1d;--s:'EB Garamond',Palatino,Georgia,serif}
+[data-theme=wood]{--bg:#3a2619;--fg:#f3e3cc;--mut:#c2a583;--pan:#4b3222;--bd:#6a4a33;--ac:#e0a458}
+[data-theme=glass]{--bg:transparent;--fg:#f2f5ff;--mut:#aab3d6;--pan:rgba(255,255,255,.09);--bd:rgba(255,255,255,.2);--ac:#8ecbff}
+html[data-theme=glass] body{background:radial-gradient(at 15% 10%,#5b3cc4,transparent 55%),radial-gradient(at 85% 85%,#0ea5a5,transparent 55%),#0b1020;background-attachment:fixed}
+[data-theme=glass] header,[data-theme=glass] aside,[data-theme=glass] #sh{backdrop-filter:blur(16px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 var(--f)}
+[hidden]{display:none!important}
+input,select,button,textarea{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:6px 10px}
+[data-theme=glass] input,[data-theme=glass] select,[data-theme=glass] button,[data-theme=glass] textarea{background:rgba(255,255,255,.1)}
+[data-theme=glass] option{color:#111}
+button{cursor:pointer}button:hover{border-color:var(--ac)}
+header{position:sticky;top:0;z-index:5;display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:8px 12px;background:var(--pan);border-bottom:1px solid var(--bd)}
+header b{font-family:var(--s);font-size:18px;margin-right:6px}
+#jump{width:150px}
+.app{display:grid;grid-template-columns:250px 1fr}
+aside{padding:10px;border-right:1px solid var(--bd);background:var(--pan);overflow:auto;max-height:calc(100vh - 52px);position:sticky;top:52px;align-self:start}
+@media(max-width:800px){.app{grid-template-columns:1fr}aside{position:static;max-height:36vh}}
+.seg{display:flex;gap:4px;margin-bottom:8px}.seg button{flex:1;padding:4px}
+.seg .on,.bk.on,.cn.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+#books{display:flex;flex-direction:column;gap:2px;margin:8px 0}
+.bk{text-align:left;border:0;background:transparent;padding:4px 8px}
+#chs{display:grid;grid-template-columns:repeat(6,1fr);gap:4px}.cn{padding:4px 0;text-align:center}
+main{padding:14px 18px 120px;min-width:0}
+.bar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+h1{font:600 28px var(--s);margin:0 8px 0 0}
+.mut{color:var(--mut);font-size:13px}
+.hd,.row{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:22px}
+.hd{border-bottom:1px solid var(--bd);padding:4px 6px;position:sticky;top:52px;background:var(--bg);z-index:2}
+[data-theme=glass] .hd{background:rgba(11,16,32,.6)}
+.row{padding:3px 6px;border-radius:6px;cursor:pointer;font:19px/1.75 var(--s);max-width:100%}
+.row:hover{background:var(--pan)}
+.row.target{outline:2px solid var(--ac);outline-offset:1px}
+sup{color:var(--mut);font:600 11px var(--f);margin-right:4px}
+.err{color:#d33;font-size:13px}.warn{color:#b8860b;font-size:13px}
+#sh{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--pan);border-top:1px solid var(--bd);padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#sw i{display:inline-block;width:26px;height:26px;border-radius:50%;margin-right:5px;cursor:pointer;border:2px solid var(--bd);vertical-align:middle}
+#fab{position:fixed;right:16px;bottom:78px;width:46px;height:46px;border-radius:50%;font-weight:700;font-size:20px;background:var(--ac);color:#fff;border:0;z-index:7;box-shadow:0 4px 14px #0005}
+dialog{background:var(--bg);color:var(--fg);border:1px solid var(--bd);border-radius:12px;width:min(600px,92vw);max-height:88vh}
+dialog::backdrop{background:#0008}
+dialog h3{margin-top:0}textarea{width:100%;min-height:150px}
+.lib{display:flex;gap:8px;padding:6px;border-bottom:1px solid var(--bd);cursor:pointer;align-items:center}.lib i{width:14px;height:14px;border-radius:50%;flex:none}
+ul.m{padding-left:18px;font-size:13px}
+</style>
+</head>
+<body>
+<header>
+  <b>Lectern</b>
+  <input id="jump" placeholder="John 3:16  ( / )" aria-label="Jump to verse">
+  <select id="v0" title="Default version"></select>
+  <select id="v1" title="Compare 2"></select>
+  <select id="v2" title="Compare 3"></select>
+  <select id="theme" title="Theme">
+    <option value="light">Light</option><option value="dark">Dark</option><option value="manuscript">Manuscript</option><option value="wood">Wood</option><option value="glass">Glass</option>
+  </select>
+  <button id="lib">★ Library</button>
+  <button id="set">⚙</button>
+</header>
+<div class="app">
+<aside>
+  <div class="seg" id="tf"><button data-t="all">All</button><button data-t="O">Old</button><button data-t="N">New</button></div>
+  <div class="seg" id="of"><button data-o="canon">Standard</button><button data-o="chron">Chronological*</button></div>
+  <input id="bq" placeholder="Filter books" style="width:100%">
+  <div id="books"></div>
+  <div class="mut">Chapter</div>
+  <div id="chs"></div>
+  <p class="mut" id="recent"></p>
+</aside>
+<main>
+  <div class="bar">
+    <h1 id="title"></h1><span class="mut" id="test"></span>
+    <button id="prev">←</button><button id="next">→</button>
+  </div>
+  <div class="bar">
+    <button id="ctx">Chapter context</button>
+    <select id="lens"><option>historical-grammatical</option><option>devotional</option><option>Second-Temple Jewish background</option><option>patristic (church fathers)</option><option>original-language word study</option></select>
+    <button id="com">Commentary</button>
+    <a id="xr" target="_blank" rel="noopener" class="mut" hidden>Cross-references for selected verse ↗</a>
+  </div>
+  <div id="msg"></div>
+  <div id="text"></div>
+</main>
+</div>
+
+<div id="sh" hidden>
+  <b id="shref"></b>
+  <span id="sw"></span>
+  <input id="lbl" placeholder="Label (e.g. Promises)" list="lbls">
+  <datalist id="lbls"></datalist>
+  <button id="sv">Save highlight</button>
+  <button id="rm">Remove</button>
+  <button id="cp">Copy</button>
+  <button id="sa">Ask AI</button>
+  <a id="xr2" target="_blank" rel="noopener">Cross-refs ↗</a>
+  <button id="sx">✕</button>
+</div>
+<button id="fab" title="Ask AI about selected text">?</button>
+
+<dialog id="ai"><h3>Ask AI</h3>
+  <p class="mut">Select text in the reader first and it is added to your question. Edit freely, then send.</p>
+  <textarea id="q"></textarea><br><br>
+  <button id="go">Open in Claude ↗</button> <button id="qc">Copy prompt</button> <button onclick="ai.close()">Close</button>
+</dialog>
+
+<dialog id="libd"><h3>My highlights</h3>
+  <input id="lf" placeholder="Filter by label" style="width:100%"><div id="ll"></div><br>
+  <button id="ex">Export JSON</button> <button onclick="libd.close()">Close</button>
+</dialog>
+
+<dialog id="setd"><h3>Settings &amp; method</h3>
+  <p>ESV API key (free at api.esv.org, stored only in this browser):<br><input id="esvk" style="width:100%"></p>
+  <button id="sk">Save</button> <button onclick="setd.close()">Close</button>
+  <h4>How accuracy is protected</h4>
+  <ul class="m">
+    <li>Scripture text is fetched live from the source for each version. It is never written or recalled by AI.</li>
+    <li>Each chapter is checked: the returned chapter must match the one requested, and verse numbers must run in order. Problems are flagged on screen.</li>
+    <li>Public-domain versions come from bible-api.com. ESV uses Crossway's official API with your key. Copyrighted versions (NKJV, NLT, NIV…) need their publishers' API keys and are not bundled.</li>
+    <li>*Chronological order is approximate, at the book level, and scholars disagree on dating.</li>
+    <li>Cross-references link to OpenBible.info's dataset. Context and commentary are AI prompts you send yourself, and the prompt asks it to flag uncertainty. Treat the output as a study aid and check it against the text.</li>
+    <li>Highlights and labels live in your browser's local storage. Use Export to back them up.</li>
+  </ul>
+</dialog>
+
+<script>
+const OT="Genesis 50,Exodus 40,Leviticus 27,Numbers 36,Deuteronomy 34,Joshua 24,Judges 21,Ruth 4,1 Samuel 31,2 Samuel 24,1 Kings 22,2 Kings 25,1 Chronicles 29,2 Chronicles 36,Ezra 10,Nehemiah 13,Esther 10,Job 42,Psalms 150,Proverbs 31,Ecclesiastes 12,Song of Solomon 8,Isaiah 66,Jeremiah 52,Lamentations 5,Ezekiel 48,Daniel 12,Hosea 14,Joel 3,Amos 9,Obadiah 1,Jonah 4,Micah 7,Nahum 3,Habakkuk 3,Zephaniah 3,Haggai 2,Zechariah 14,Malachi 4";
+const NT="Matthew 28,Mark 16,Luke 24,John 21,Acts 28,Romans 16,1 Corinthians 16,2 Corinthians 13,Galatians 6,Ephesians 6,Philippians 4,Colossians 4,1 Thessalonians 5,2 Thessalonians 3,1 Timothy 6,2 Timothy 4,Titus 3,Philemon 1,Hebrews 13,James 5,1 Peter 5,2 Peter 3,1 John 5,2 John 1,3 John 1,Jude 1,Revelation 22";
+const BK=[...OT.split(','),...NT.split(',')].map((s,i)=>{const k=s.lastIndexOf(' ');return{n:s.slice(0,k),c:+s.slice(k+1),i,t:i<39?'O':'N'}});
+const CH=[0,17,1,2,3,4,5,6,7,8,18,9,19,21,20,10,11,12,13,30,28,31,29,27,22,32,33,35,23,34,24,25,26,14,36,37,16,15,38,39,40,41,42,43,58,47,51,52,45,46,44,48,49,50,56,53,55,59,54,60,64,57,61,62,63,65];
+const VERS={kjv:'KJV',web:'WEB',asv:'ASV',darby:'Darby',ylt:"Young's Literal",bbe:'Basic English',esv:'ESV (API key)'};
+const COL=['#f5c542','#6fcf97','#56b3f5','#f08bb4','#b99cf5'];
+const GUARD=" Be accurate: say where scholars disagree or where you are unsure, do not invent quotations or citations, and quote Scripture only from text I give you.";
+const $=s=>document.querySelector(s);
+let S={theme:'light',vers:['kjv'],order:'canon',test:'all',hl:{},cur:[42,3,16],rec:[],esv:''};
+try{Object.assign(S,JSON.parse(localStorage.getItem('lectern')||'{}'))}catch(e){}
+const save=()=>{try{localStorage.setItem('lectern',JSON.stringify(S))}catch(e){}};
+let cur={b:S.cur[0],c:S.cur[1],v:S.cur[2]},sel='';
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const key=v=>`${cur.b}.${cur.c}.${v}`;
+const ref=()=>`${BK[cur.b].n} ${cur.c}${cur.v?':'+cur.v:''}`;
+const cache={};
+
+async function get(v,b,c){
+  const k=v+'|'+b+'|'+c;if(cache[k])return cache[k];
+  const n=BK[b].n;let r,warn='';
+  if(v==='esv'){
+    if(!S.esv)throw Error('Add your ESV API key in ⚙ Settings.');
+    const u=`https://api.esv.org/v3/passage/text/?q=${encodeURIComponent(n+' '+c)}&include-headings=false&include-footnotes=false&include-passage-references=false&include-short-copyright=false&indent-paragraphs=0&indent-poetry=false&indent-declares=0&indent-psalm-doxology=0&line-length=0`;
+    const res=await fetch(u,{headers:{Authorization:'Token '+S.esv}});
+    if(!res.ok)throw Error('ESV API returned '+res.status);
+    const t=((await res.json()).passages||[])[0];
+    if(!t)throw Error('ESV API returned no text');
+    const p=t.split(/\[(\d+)\]/);r=[];
+    for(let i=1;i<p.length;i+=2)r.push({v:+p[i],t:p[i+1].replace(/\s+/g,' ').trim()});
+  }else{
+    const res=await fetch(`https://bible-api.com/${encodeURIComponent(n+' '+c)}?translation=${v}`);
+    if(!res.ok)throw Error('Source returned '+res.status+' (rate limit? wait a moment)');
+    const j=await res.json();
+    r=(j.verses||[]).map(x=>({v:x.verse,t:x.text.replace(/\s+/g,' ').trim(),ch:x.chapter}));
+    if(r.some(x=>x.ch!==c))throw Error('Source returned the wrong chapter, so it was discarded.');
+  }
+  if(!r.length)throw Error('No verses returned');
+  if(r.some((x,i)=>i&&x.v<=r[i-1].v)||r[0].v!==1)warn='verse numbering looks irregular';
+  return cache[k]={r,warn};
+}
+
+function side(){
+  const q=$('#bq').value.toLowerCase();
+  let l=BK.filter(b=>(S.test==='all'||b.t===S.test)&&b.n.toLowerCase().includes(q));
+  if(S.order==='chron')l.sort((a,b)=>CH.indexOf(a.i)-CH.indexOf(b.i));
+  $('#books').innerHTML=l.map(b=>`<button class="bk${b.i===cur.b?' on':''}" data-b="${b.i}">${b.n}</button>`).join('');
+  $('#chs').innerHTML=Array.from({length:BK[cur.b].c},(_,i)=>`<button class="cn${i+1===cur.c?' on':''}" data-c="${i+1}">${i+1}</button>`).join('');
+  document.querySelectorAll('#tf button').forEach(b=>b.classList.toggle('on',b.dataset.t===S.test));
+  document.querySelectorAll('#of button').forEach(b=>b.classList.toggle('on',b.dataset.o===S.order));
+  $('#recent').innerHTML=S.rec.length?'Recent: '+S.rec.map(r=>`<a href="#" data-r="${r}">${r}</a>`).join(' · '):'';
+}
+
+async function show(){
+  const n=BK[cur.b].n,vs=S.vers.filter(Boolean);
+  $('#title').textContent=`${n} ${cur.c}`;
+  $('#test').textContent=BK[cur.b].t==='O'?'Old Testament':'New Testament';
+  document.title=`${n} ${cur.c} · Lectern`;
+  S.cur=[cur.b,cur.c,cur.v];
+  const rk=`${n} ${cur.c}`;S.rec=[rk,...S.rec.filter(x=>x!==rk)].slice(0,6);save();side();
+  $('#text').innerHTML='<p class="mut">Loading…</p>';$('#msg').innerHTML='';
+  const out=await Promise.all(vs.map(v=>get(v,cur.b,cur.c).then(d=>({v,...d})).catch(e=>({v,err:e.message}))));
+  const ok=out.filter(o=>!o.err);
+  $('#msg').innerHTML=out.filter(o=>o.err).map(o=>`<p class="err">${VERS[o.v]}: ${esc(o.err)}</p>`).join('')+ok.filter(o=>o.warn).map(o=>`<p class="warn">${VERS[o.v]}: ${o.warn}</p>`).join('');
+  if(!ok.length){$('#text').innerHTML='';return}
+  const max=Math.max(...ok.map(o=>o.r[o.r.length-1].v));
+  let h=`<div class="hd" style="--n:${ok.length}">`+ok.map(o=>`<b>${VERS[o.v]}</b>`).join('')+'</div>';
+  for(let v=1;v<=max;v++){
+    const hl=S.hl[key(v)];
+    h+=`<div class="row${v===cur.v?' target':''}" data-v="${v}" style="--n:${ok.length}${hl?`;background:${hl.c}55`:''}">`+
+      ok.map(o=>{const x=o.r.find(y=>y.v===v);return`<div>${x?`<sup>${v}</sup>${esc(x.t)}`:''}</div>`}).join('')+'</div>';
+  }
+  h+=ok.some(o=>o.v==='esv')?'<p class="mut">ESV® Bible, © Crossway. Used via the ESV API.</p>':'';
+  $('#text').innerHTML=h;
+  if(cur.v){const e=$('.row.target');e&&e.scrollIntoView({block:'center'});sheet()}
+}
+
+function go(b,c,v){cur={b,c,v:v||0};$('#sh').hidden=!v;$('#xr').hidden=true;show();if(!v)scrollTo(0,0)}
+function jump(s){
+  const m=s.trim().match(/^((?:[1-3]\s*)?[a-z][a-z\s.]*?)\s*(?:(\d+)(?:\s*[:.]\s*(\d+))?)?$/i);
+  if(!m)return flash('Try “John 3:16” or “1 Cor 13”');
+  const q=m[1].toLowerCase().replace(/[^a-z0-9]/g,'');
+  const b=BK.find(x=>x.n.toLowerCase().replace(/[^a-z0-9]/g,'').startsWith(q));
+  if(!b)return flash('Book not found: '+m[1]);
+  const c=+m[2]||1,v=+m[3]||0;
+  if(c>b.c)return flash(`${b.n} has only ${b.c} chapters`);
+  go(b.i,c,v);
+}
+const flash=t=>{$('#msg').innerHTML=`<p class="err">${t}</p>`};
+function step(d){let b=cur.b,c=cur.c+d;if(c<1){b=Math.max(0,b-1);c=BK[b].c}else if(c>BK[b].c){b=Math.min(65,b+1);c=1}go(b,c)}
+
+function sheet(){
+  const h=S.hl[key(cur.v)]||{};
+  $('#sh').hidden=false;$('#shref').textContent=ref();$('#lbl').value=h.l||'';
+  $('#sw').innerHTML=COL.map(c=>`<i data-c="${c}" style="background:${c}"></i>`).join('');
+  $('#lbls').innerHTML=[...new Set(Object.values(S.hl).map(x=>x.l).filter(Boolean))].map(l=>`<option value="${esc(l)}">`).join('');
+  const u='https://www.openbible.info/labs/cross-references/search?q='+encodeURIComponent(ref());
+  $('#xr').href=$('#xr2').href=u;$('#xr').hidden=false;
+}
+function addHl(c){S.hl[key(cur.v)]={c,l:$('#lbl').value.trim(),r:ref(),b:cur.b,ch:cur.c,v:cur.v};save();show()}
+
+function ai(p){$('#q').value=p;$('#ai').showModal()}
+function libShow(){
+  const f=$('#lf').value.toLowerCase();
+  const items=Object.values(S.hl).filter(h=>!f||(h.l||'').toLowerCase().includes(f)).sort((a,b)=>a.b-b.b||a.ch-b.ch||a.v-b.v);
+  $('#ll').innerHTML=items.length?items.map(h=>`<div class="lib" data-b="${h.b}" data-c="${h.ch}" data-v="${h.v}"><i style="background:${h.c}"></i><b>${h.r}</b><span class="mut">${esc(h.l||'no label')}</span></div>`).join(''):'<p class="mut">No highlights yet. Tap a verse to add one.</p>';
+}
+
+document.addEventListener('mouseup',()=>{const s=getSelection().toString().trim();if(s)sel=s});
+document.addEventListener('touchend',()=>setTimeout(()=>{const s=getSelection().toString().trim();if(s)sel=s},50));
+$('#text').onclick=e=>{const r=e.target.closest('.row');if(!r||getSelection().toString())return;cur.v=+r.dataset.v;document.querySelectorAll('.row.target').forEach(x=>x.classList.remove('target'));r.classList.add('target');sheet()};
+$('#books').onclick=e=>{const b=e.target.closest('[data-b]');if(b)go(+b.dataset.b,1)};
+$('#chs').onclick=e=>{const b=e.target.closest('[data-c]');if(b)go(cur.b,+b.dataset.c)};
+$('#recent').onclick=e=>{const r=e.target.dataset.r;if(r){e.preventDefault();jump(r)}};
+$('#tf').onclick=e=>{if(e.target.dataset.t){S.test=e.target.dataset.t;save();side()}};
+$('#of').onclick=e=>{if(e.target.dataset.o){S.order=e.target.dataset.o;save();side()}};
+$('#bq').oninput=side;
+$('#jump').onkeydown=e=>{if(e.key==='Enter'){jump(e.target.value);e.target.blur()}};
+$('#prev').onclick=()=>step(-1);$('#next').onclick=()=>step(1);
+$('#sw').onclick=e=>{if(e.target.dataset.c)addHl(e.target.dataset.c)};
+$('#sv').onclick=()=>addHl((S.hl[key(cur.v)]||{}).c||COL[0]);
+$('#rm').onclick=()=>{delete S.hl[key(cur.v)];save();show()};
+$('#sx').onclick=()=>{$('#sh').hidden=true;cur.v=0;document.querySelectorAll('.row.target').forEach(x=>x.classList.remove('target'))};
+$('#cp').onclick=()=>{const r=$(`.row[data-v="${cur.v}"]`);navigator.clipboard.writeText(`${ref()} — ${r?r.innerText.replace(/\s+/g,' ').trim():''}`)};
+$('#sa').onclick=()=>{const r=$(`.row[data-v="${cur.v}"]`);ai(`I'm studying ${ref()}: "${r?r.innerText.replace(/^\d+\s*/,'').trim():''}"\n\nMy question: `+GUARD)};
+$('#fab').onclick=()=>ai(`I'm studying ${BK[cur.b].n} ${cur.c}.${sel?` About this text: "${sel}".`:''}\n\nMy question: `+GUARD);
+$('#ctx').onclick=()=>{const n=BK[cur.b].n;ai(`Give a study introduction to ${n} (author, approximate date, original audience, occasion, major themes), then the setting and flow of chapter ${cur.c}: where it sits in the book's narrative or argument and the key historical and cultural background.`+GUARD)};
+$('#com').onclick=()=>ai(`Write a verse-by-verse commentary on ${BK[cur.b].n} ${cur.c} from a ${$('#lens').value} perspective. Note where interpretations differ and label which view is which.`+GUARD);
+$('#go').onclick=()=>window.open('https://claude.ai/new?q='+encodeURIComponent($('#q').value),'_blank','noopener');
+$('#qc').onclick=()=>navigator.clipboard.writeText($('#q').value);
+$('#lib').onclick=()=>{libShow();$('#libd').showModal()};
+$('#lf').oninput=libShow;
+$('#ll').onclick=e=>{const d=e.target.closest('.lib');if(d){$('#libd').close();go(+d.dataset.b,+d.dataset.c,+d.dataset.v)}};
+$('#ex').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(S.hl,null,1)],{type:'application/json'}));a.download='lectern-highlights.json';a.click()};
+$('#set').onclick=()=>{$('#esvk').value=S.esv;$('#setd').showModal()};
+$('#sk').onclick=()=>{S.esv=$('#esvk').value.trim();save();$('#setd').close();show()};
+$('#theme').onchange=e=>{S.theme=e.target.value;document.documentElement.dataset.theme=S.theme;save()};
+['v0','v1','v2'].forEach((id,i)=>{
+  $('#'+id).innerHTML=(i?'<option value="">+ compare</option>':'')+Object.entries(VERS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
+  $('#'+id).value=S.vers[i]||'';
+  $('#'+id).onchange=()=>{S.vers=['v0','v1','v2'].map(x=>$('#'+x).value).filter((v,j,a)=>v&&a.indexOf(v)===j);save();show()};
+});
+document.addEventListener('keydown',e=>{
+  if(/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;
+  if(e.key==='/'){e.preventDefault();$('#jump').focus()}
+  if(e.key==='ArrowLeft')step(-1);if(e.key==='ArrowRight')step(1);
+});
+document.documentElement.dataset.theme=S.theme;$('#theme').value=S.theme;
+side();show();
+</script>
+</body>
+</html>
